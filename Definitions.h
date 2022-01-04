@@ -6,16 +6,20 @@ typedef union{
   boolean b_StateBtnLaby[4];
 }StateBtnLaby;
 
-#define PMP_ANEMO                 0
 
-#define DRT_BTN_GAUCHE            27//35
-#define DRT_BTN_DROITE            12//34
-#define DRT_BTN_AV                32//
-#define DRT_BTN_AR                33//
+#define DRT_BTN_GAUCHE            18
+#define DRT_BTN_DROITE            5
+#define DRT_BTN_AV                21
+#define DRT_BTN_AR                19
 
-#define DRT_BTN_1                 2
-#define DRT_BTN_2                 4
-#define DRT_BTN_3                 15
+#define DRT_BTN_1                 27
+#define DRT_BTN_2                 14
+#define DRT_BTN_3                 12
+
+#define DRT_RETRO_BTN_1           4
+#define DRT_RETRO_BTN_2           2
+#define DRT_RETRO_BTN_3           15
+
 
 
 #define FREQUENCE_TIMER_PRINCIPAL 10

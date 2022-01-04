@@ -26,9 +26,11 @@ char host[] = "192.168.4.1";
 uint8_t ui_Sequence = 0;
 
 uint8_t ui_NbBtnDejaAppui_DRT = 0;
+uint8_t b_BtnDejaAppui_DRT[3] = {false, false, false};
 uint8_t b_EtatBtn_DRT[3] = {false, false, false};
 uint8_t b_EtatBtn_DRT_Z1[3] = {false, false, false};
 const uint8_t ui_PinBtn_DRT[3] = {DRT_BTN_1, DRT_BTN_2, DRT_BTN_3};
+const uint8_t ui_PinBtn_RETRO_DRT[3] = {DRT_RETRO_BTN_1, DRT_RETRO_BTN_2, DRT_RETRO_BTN_3};
 
 uint8_t ui_EtatBtn_DRT_CTRL = 0;
 uint8_t ui_EtatBtn_DRT_CTRL_Z1 = 0;
@@ -80,6 +82,15 @@ uint8_t tache_ConvertBtnState_3(boolean b_Btn1, boolean b_Btn2, boolean b_Btn3)
   return ui_result;
 }
 
+void tache_RAZ() {
+  uint8_t i;
+  ui_NbBtnDejaAppui_DRT = 0;
+  for(i = 0; i < 3; i++)
+  {
+    b_BtnDejaAppui_DRT[i] = false;
+  }
+}
+
 void setup(){
   uint8_t i;
   // Serial port for debugging purposes
@@ -91,7 +102,8 @@ void setup(){
   pinMode(DRT_BTN_AV, INPUT_PULLUP);
   pinMode(DRT_BTN_AR, INPUT_PULLUP);
   for(i = 0; i < 3; i++)
-  { pinMode(ui_PinBtn_DRT[i], INPUT_PULLUP);   }
+  { pinMode(ui_PinBtn_DRT[i], INPUT_PULLUP);
+    pinMode(ui_PinBtn_RETRO_DRT[i], OUTPUT);  }
 
 
   WiFi.begin(ssid, password);
@@ -128,9 +140,19 @@ void loop() {
   uint8_t i;
   boolean b_ChangementEtatBtn_DRT = false;
   String msg = "";
+  String data;
   
   if (TimerCompteurPrincipal >= FREQUENCE_TIMER_PRINCIPAL)      // toutes les 10ms
   {
+    webSocketClient.getData(data);
+    if (data.length() > 0) {
+      Serial.print("Received data: ");
+      Serial.println(data);
+      if(data == "RAZ")
+      {
+        
+      }
+    }
     TimerCompteurPrincipal = TimerCompteurPrincipal - FREQUENCE_TIMER_PRINCIPAL;
 
     ui_EtatBtn_DRT_CTRL_Z1 = ui_EtatBtn_DRT_CTRL;
@@ -157,6 +179,7 @@ void loop() {
       if(b_EtatBtn_DRT_Z1[i] != b_EtatBtn_DRT[i])
       {
         b_ChangementEtatBtn_DRT = true;
+        b_BtnDejaAppui_DRT[i] = true;
       }
     }
 
@@ -168,6 +191,11 @@ void loop() {
         msg += b_EtatBtn_DRT[i];
       }
       webSocketClient.sendData(msg);
+    }
+
+    for(i = 0; i < 3; i++)
+    {
+      digitalWrite(ui_PinBtn_RETRO_DRT[i], !b_BtnDejaAppui_DRT[i]); 
     }
 
     if(ui_Sequence < NB_PERIODE_SEQUENCEUR)
