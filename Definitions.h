@@ -7,10 +7,10 @@ typedef union{
 }StateBtnLaby;
 
 
-#define DRT_BTN_GAUCHE            18
-#define DRT_BTN_DROITE            5
-#define DRT_BTN_AV                21
-#define DRT_BTN_AR                19
+#define DRT_BTN_GAUCHE            19
+#define DRT_BTN_DROITE            21
+#define DRT_BTN_AV                18
+#define DRT_BTN_AR                5
 
 #define DRT_BTN_1                 27
 #define DRT_BTN_2                 14

@@ -9,13 +9,12 @@
 // Import required libraries
 #include "Definitions.h"
 #include <WiFi.h>
-#include <WebSocketClient.h>
+#include <WebSocketsClient.h>
 #include <elapsedMillis.h>
 
 elapsedMillis TimerCompteurPrincipal;  
 
-WebSocketClient webSocketClient;
-WiFiClient client;
+WebSocketsClient webSocket;
 
 // Replace with your network credentials
 const char* ssid = "PALM_Wifi";
@@ -120,19 +119,7 @@ void setup(){
  
   delay(5000);
  
-  if (client.connect(host, 80)) {
-    Serial.println("Connected");
-  } else {
-    Serial.println("Connection failed.");
-  }
- 
-  webSocketClient.path = path;
-  webSocketClient.host = host;
-  if (webSocketClient.handshake(client)) {
-    Serial.println("Handshake successful");
-  } else {
-    Serial.println("Handshake failed.");
-  }
+  webSocket.begin("192.168.4.1", 80, "/ws");
 
 }
 
@@ -140,35 +127,27 @@ void loop() {
   uint8_t i;
   boolean b_ChangementEtatBtn_DRT = false;
   String msg = "";
-  String data;
+  webSocket.loop();
   
   if (TimerCompteurPrincipal >= FREQUENCE_TIMER_PRINCIPAL)      // toutes les 10ms
   {
-    webSocketClient.getData(data);
-    if (data.length() > 0) {
-      Serial.print("Received data: ");
-      Serial.println(data);
-      if(data == "RAZ")
-      {
-        
-      }
-    }
     TimerCompteurPrincipal = TimerCompteurPrincipal - FREQUENCE_TIMER_PRINCIPAL;
+
 
     ui_EtatBtn_DRT_CTRL_Z1 = ui_EtatBtn_DRT_CTRL;
     ui_EtatBtn_DRT_CTRL = tache_ConvertBtnState_4(!digitalRead(DRT_BTN_GAUCHE), !digitalRead(DRT_BTN_DROITE), !digitalRead(DRT_BTN_AV), !digitalRead(DRT_BTN_AR));
 
     if(ui_EtatBtn_DRT_CTRL_Z1 != ui_EtatBtn_DRT_CTRL)
     {
-      msg = "IO@DRT_CTRL:" + ui_EtatBtn_DRT_CTRL;
-      webSocketClient.sendData(msg);
+      msg = "IO@DRT_CTRL:" + String(ui_EtatBtn_DRT_CTRL);
+      webSocket.sendTXT(msg);
     }
     else if(ui_EtatBtn_DRT_CTRL !=0)
     {
       if(ui_Sequence == 0)
       {
-        msg = "IO@DRT_CTRL:" + ui_EtatBtn_DRT_CTRL;
-       webSocketClient.sendData(msg);
+        msg = "IO@DRT_CTRL:" + String(ui_EtatBtn_DRT_CTRL);
+       webSocket.sendTXT(msg);
       }
     }
 
@@ -176,26 +155,45 @@ void loop() {
     {
       b_EtatBtn_DRT_Z1[i] = b_EtatBtn_DRT[i];
       b_EtatBtn_DRT[i] = !digitalRead(ui_PinBtn_DRT[i]);
-      if(b_EtatBtn_DRT_Z1[i] != b_EtatBtn_DRT[i])
+      //Serial.print(b_EtatBtn_DRT[i]);
+      //Serial.print(" - ");
+      /*if(b_EtatBtn_DRT_Z1[i] != b_EtatBtn_DRT[i])
       {
         b_ChangementEtatBtn_DRT = true;
         b_BtnDejaAppui_DRT[i] = true;
+      }*/
+      if((b_BtnDejaAppui_DRT[i] == false) && (b_EtatBtn_DRT[i] == true))
+      {
+        if(i > 0)
+        {
+          if(b_BtnDejaAppui_DRT[i - 1] == true)
+          {
+            b_BtnDejaAppui_DRT[i] = true;
+            b_ChangementEtatBtn_DRT = true;
+          }
+        }
+        else
+        {
+            b_BtnDejaAppui_DRT[i] = true;
+            b_ChangementEtatBtn_DRT = true;
+        }  
       }
     }
+    //Serial.println();
 
     if(b_ChangementEtatBtn_DRT == true)
     {
       msg = "IO@DRT_INFO:";
       for(i = 0; i < 3; i++)
       {
-        msg += b_EtatBtn_DRT[i];
+        msg += String(b_EtatBtn_DRT[i]);
       }
-      webSocketClient.sendData(msg);
+      webSocket.sendTXT(msg);
     }
 
     for(i = 0; i < 3; i++)
     {
-      digitalWrite(ui_PinBtn_RETRO_DRT[i], !b_BtnDejaAppui_DRT[i]); 
+      digitalWrite(ui_PinBtn_RETRO_DRT[i], b_BtnDejaAppui_DRT[i]); 
     }
 
     if(ui_Sequence < NB_PERIODE_SEQUENCEUR)
